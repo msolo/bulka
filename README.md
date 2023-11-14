@@ -27,7 +27,7 @@ The server defaults to denying PUT requests, so enable this explicitly if you wa
 
 # Design
 
-There are a few notes in [docs/Design.md]() that explain a bit about the code and design decisions.
+There are a few notes in [docs/Design.md](docs/Design.md) that explain a bit about the code and design decisions.
 
 # An Annotated Example Recipe
 
