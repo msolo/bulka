@@ -1,0 +1,134 @@
+menu {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+menu button {
+  font-family: system-ui;
+}
+
+
+menu button:active {
+  color: #aaa;
+}
+
+.pulldown-menu {
+  margin-top: 0.25rem;
+  border-radius: 0.7rem;
+
+  width: fit-content;
+  position: absolute;
+  right: 0.5rem;
+  z-index: 3;
+
+  /* These are toggled by the visible class in Javascript */
+  opacity: 0;
+  visibility: hidden;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+    /* Enable pointer events here, since this more specific selector will override others.  */
+    pointer-events: all;
+  }
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow: 0 3.1px 11.3px rgba(0, 0, 0, 0.014),
+  0 7.4px 19.3px rgba(0, 0, 0, 0.02),
+  0 14px 24.3px rgba(0, 0, 0, 0.025),
+  0 25px 27.3px rgba(0, 0, 0, 0.03),
+  0 46.8px 32.3px rgba(0, 0, 0, 0.036),
+  0 112px 80px rgba(0, 0, 0, 0.05);
+  transition: all 0.1s ease-in-out;
+}
+@media all and (max-width: 629px) {
+  /* mobile  */
+  .pulldown-menu {
+    bottom: calc(var(--nav-height) - 0.5rem);
+  }
+}
+@media all and (min-width: 630px) {
+  /* tablet */
+  .pulldown-menu {
+    top: calc(var(--nav-height) - 0.5rem);
+  }
+}
+
+/* Older Safari doesn't like nested css selectors */
+.pulldown-menu.visible {
+  opacity: 1;
+  visibility: visible;
+  /* Enable pointer events here, since this more specific selector will override others.  */
+  pointer-events: all;
+}
+
+
+/* dark mode darker separator */
+/* .pulldown-menu.separator {
+  color: #f8f8f8;
+  }
+*/
+
+.pulldown-menu button {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--gray4-light);
+  background: var(--gray6-light);
+  color: black;
+  font-size: 0.92rem;
+  pointer-events: all;
+
+  width: 100%;
+
+  appearance: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* NOTE: requires <body ontouchstart=""> to trigger properly. */
+.pulldown-menu button:active {
+  background: var(--gray4-light);
+}
+
+.pulldown-menu button.danger {
+  color: var(--red-light);
+}
+
+.pulldown-menu button.divider-after {
+  border-width: 4px;
+  /* border-color: #f8f8f8; */
+  border-color: var(--gray4-light);
+}
+
+.pulldown-menu button:first-of-type {
+  border-radius: 0.7em 0.7em 0px 0px;
+}
+
+.pulldown-menu button:last-of-type {
+  border-radius: 0px 0px 0.7em 0.7em;
+  border: none;
+}
+
+/* Used to mute events in Javascript so clicks in other control
+are ignored when a menu is active. */
+.pulldown-menu-mute-events {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulldown-menu.invisible {
+    transform: none;
+  }
+}
+
+@media all and (max-width: 629px) {
+  menu button {
+    font-size: 1rem;
+  }
+}

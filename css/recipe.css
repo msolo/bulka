@@ -1,0 +1,170 @@
+.recipe-section {
+    display: flex;
+    margin: 0 0.5rem;
+}
+
+.recipe-instructions {
+    flex-basis: 65%;
+    order: 2;
+}
+
+.recipe-ingredients {
+    flex-basis: 35%;
+    flex: initial;
+    margin-right: 1rem;
+    order: 1;
+}
+
+/*
+Nesting under recipe section did not seem to work for the descendent selector:
+https://caniuse.com/css-nesting
+*/
+.recipe-section table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px black solid;
+    table-layout: fixed;
+    min-width: 100%;
+}
+
+.recipe-section thead {
+    background-color: var(--gray3-light);
+    border-bottom: 1px solid black;
+}
+
+.recipe-section tbody tr:nth-child(even) {
+    background-color: var(--gray5-light);
+}
+
+.recipe-section td {
+    padding: 0.25em;
+    font-size: 1rem;
+    vertical-align: baseline;
+}
+
+.recipe-section thead td {
+    white-space: nowrap;
+}
+
+.recipe-section .width-25 {
+    width: 25%;
+}
+
+.recipe-section .width-50 {
+    width: 50%;
+}
+
+
+.recipe-section a {
+    text-decoration: none;
+}
+
+.recipe-section h1 {
+    font-size: 1.3rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.recipe-section h2 {
+    font-size: 1.2rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5em;
+}
+
+.recipe-section h3 {
+    font-size: 1.1rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5em;
+}
+
+.recipe-section p {
+    line-height: 1.25em;
+}
+
+.recipe-section ul {
+    margin: 0;
+    padding: 0;
+    margin-left: 4ch;
+    margin-bottom: 1em;
+}
+
+/* make nested items more compact */
+.recipe-section li>ul {
+    margin-left: 3ch;
+}
+
+.recipe-section li {
+    padding: 0;
+    margin: 0;
+}
+
+.mobile-only {
+  visibility: hidden;
+}
+
+.mobile-only>a {
+  margin: 0.25em;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.mobile-only>a:active{
+  background-color: var(--gray-light);
+}
+
+span.mobile-only {
+  font-size: 2rem;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  margin: 1rem;
+  margin-bottom: calc(1rem + var(--nav-height));
+  background-color:rgba(255, 255, 255, .9);
+  border-radius: .25em;
+}
+
+
+@media all and (max-width: 629px) {
+  .mobile-only {
+    visibility: inherit;
+  }
+
+  /* one column code */
+  .recipe-section {
+    display: flex;
+    align-items: stretch;
+    flex-flow: column wrap;
+  }
+
+  .recipe-ingredients {
+    order: 1;
+    width: 100%;
+  }
+
+  .recipe-instructions {
+    order: 2;
+    width: 100%;
+  }
+
+  table {
+    width: 100%;
+  }
+}
+
+
+@media print {
+  html,
+  body {
+    font-size: 10pt;
+    margin: 1rem;
+    height: fit-content;
+  }
+
+  nav {
+    display: none;
+  }
+
+  .toolbar-spacer {
+    display: none;
+  }
+}

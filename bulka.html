@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
+
+  <!-- FIXME(msolo) vfl goes here -->
+  <!-- NOTE(msolo) This icon must use an absolute URL because iOS Safari will
+     not send a client certificate for these requests. -->
+  <link rel="apple-touch-icon" href="https://hiredgoons.com/apps/bulka/img/bulka.png?v=2">
+  <link rel="icon" type="image/png" href="https://hiredgoons.com/apps/bulka/img/bulka-ico.png?v=1">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/menu.css">
+  <link rel="stylesheet" href="css/recipe.css">
+
+  <title>🥖 Bulka</title>
+</head>
+
+<!-- Register onclick and onstouchstart on body so that touch events show up as
+  clicks. Feels like a bug, but this really seems necessary. -->
+
+<body onclick="void(0);" ontouchstart="">
+  <nav id="nav"></nav>
+  <!-- NOTE: using margin on <main> makes the iOS scroll bar render oddly,
+  so we use a div to create space under the nav. -->
+  <div class="toolbar-spacer"></div>
+  <main id="app">
+    <div class="tab-content" id="tab-filelist">
+    </div>
+    <div class="tab-content" id="tab-view">
+    </div>
+    <div class="tab-content" id="tab-edit">
+    </div>
+  </main>
+</body>
+
+<script id="nav-tmpl" type="text/x-handlebars-template">
+    <div class="toolbar">
+      <span>
+        <button id="button-hide-sidebar" onclick="controller.onHideFileList();">
+          <svg id="left-nav-hide-sidebar"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <line x1="9" y1="3" x2="9" y2="21" />
+            <path d="M17 16l-4-4 4-4" />
+          </svg>
+        </button>
+
+        <button id="button-filelist" onclick="controller.onFileList();">
+          <svg id="left-nav-menu-icon"
+            stroke="currentColor"
+            stroke-width="0.75"
+            viewBox="0 0 14 24"
+            style="height: 1.5rem"
+          >
+            <path fill="currentColor" d="M12.7270006,3.68663679 C13.1062197,3.28512543 13.0881482,2.6522184 12.6866368,2.27299937 C12.2851254,1.89378034 11.6522184,1.91185185 11.2729994,2.31336321 L2.77268886,11.3133632 C2.40871099,11.6987375 2.4086868,12.3011749 2.77263373,12.6865784 L11.2729442,21.6880264 C11.652131,22.0895682 12.2850366,22.1076905 12.6865784,21.7285038 C13.0881202,21.349317 13.1062426,20.7164114 12.7270558,20.3148696 L4.87515196,12.0000552 L12.7270006,3.68663679 Z" />
+          </svg>
+          Recipes
+        </button>
+
+        <button id="button-done" accesskey="s" onclick="controller.onEditDone();">Done</button>
+      </span>
+
+      <span>
+        <label id="label-filelist">
+          🥖 Bulka 🥯
+        </label>
+        <label id="label-recipe">
+          {{recipe.name}}
+        </label>
+      </span>
+
+      <span>
+        <menu id="button-menu">
+          <button class="menu-button" onclick="menuHandler.showMenu('main-menu');">
+            <svg id="3-dot-more-menu-icon" viewBox="0 0 20 20"
+              stroke-width="0.25"
+              style="width: 1.5rem; height: 1.5rem;"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M7 10C7 10.5523 6.55228 11 6 11C5.44772 11 5 10.5523 5 10C5 9.44772 5.44772 9 6 9C6.55228 9 7 9.44772 7 10Z" fill="currentColor"/>
+              <path d="M11 10C11 10.5523 10.5523 11 10 11C9.44772 11 9 10.5523 9 10C9 9.44772 9.44772 9 10 9C10.5523 9 11 9.44772 11 10Z" fill="currentColor"/>
+              <path d="M15 10C15 10.5523 14.5523 11 14 11C13.4477 11 13 10.5523 13 10C13 9.44772 13.4477 9 14 9C14.5523 9 15 9.44772 15 10Z" fill="currentColor"/>
+              <path d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2ZM3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10Z" fill="currentColor"/>
+            </svg>
+          </button>
+          <div class="pulldown-menu" id="main-menu">
+            <button class="divider-after" onclick="controller.onNew();">
+              New Recipe
+            </button>
+            <button onclick="controller.onAbout();">
+              About...
+            </button>
+            <button onclick="controller.onInstall();">
+              Prepare Install...
+            </button>
+            <button class="divider-after" onclick="controller.onReload();">
+              Force Reload
+            </button>
+            <button class="divider-after" onclick="window.print();">
+              Print
+            </button>
+          <!--
+            <button class="danger">
+              Delete Recipe
+            </button>
+          -->
+          </div>
+        </menu>
+
+        <button id="button-edit" accesskey="e" onclick="controller.onEdit();">
+          Edit
+        </button>
+        <button id="button-cancel" onclick="controller.onEditCancel();">
+          Cancel
+        </button>
+
+      </span>
+    </div>
+
+    <span class="mobile-only">
+      <a onclick="controller.resetScroll()">⬆️</a>
+    </span>
+</script>
+
+<script id="tab-filelist-tmpl" type="text/x-handlebars-template">
+  <ul class="filelist">
+    {{#each recipeList}}
+    <li>
+      <custom-button
+        onclick="controller.onSelectRecipe('{{this.name}}');"
+        >
+        {{this.name}} {{#if this.recipeData.isModified}}•{{/if}}
+      </button>
+    </li>
+    {{/each}}
+  </ul>
+</script>
+
+<script id="tab-view-tmpl" type="text/x-handlebars-template">
+    <div class="recipe-section">
+      <div class="recipe-ingredients">
+        <h1>{{recipe.name}}</h1>
+        {{#if recipe.prefermentFormula}}
+          <h2>
+            {{recipe.prefermentFormula.name}}
+            {{recipe.prefermentPercent}}%
+            {{recipe.prefermentFormula.fermentTime}}
+          </h2>
+          <table>
+            <thead>
+              <td class="width-50">Ingredient</td>
+              <td class="width-25" align="right">Baker's %</td>
+              <td class="width-25" align="right">Amount</td>
+            </thead>
+
+            {{#each recipe.prefermentFormula.ingredients}}
+              <tr>
+                <td>{{this.name}}</td>
+                <td align="right">{{format_percentage this.percent}}%</td>
+                <td align="right">{{format_grams this.amountGrams}}g</td>
+              </tr>
+            {{/each}}
+          </table>
+
+          <h2>
+            {{recipe.finalFormula.name}}
+          </h2>
+          <table>
+            <thead>
+              <td class="width-50">Ingredient</td>
+              <td class="width-25" align="right">Baker's %</td>
+              <td class="width-25" align="right">Amount</td>
+            </thead>
+            {{#each recipe.finalFormula.ingredients}}
+              <tr>
+                <td>{{this.name}}</td>
+                <td align="right">&ndash;</td>
+                <td align="right">{{format_grams this.amountGrams}}g</td>
+              </tr>
+            {{/each}}
+          </table>
+        {{/if}}
+
+        <h2>Total Formula {{recipe.quantityGrams}}g</h2>
+        <table>
+          <thead>
+            <td class="width-50">Ingredient</td>
+            <td class="width-25" align="right">Baker's %</td>
+            <td class="width-25" align="right">Amount</td>
+          </thead>
+          {{#each recipe.formula.ingredients}}
+            <tr>
+              <td>{{this.name}}</td>
+              <td align="right">{{format_percentage this.percent}}%</td>
+              <td align="right">{{format_grams this.amountGrams}}g</td>
+            </tr>
+          {{/each}}
+        </table>
+
+        {{#if recipe.schedule}}
+          <h2> Schedule </h2>
+          <table>
+            <thead>
+              <td style="width:3ch;"></td>
+              <td style="width:5ch;" align="right">Start</td>
+              <td style="width:7ch;"></td>
+              <td >Description</td>
+            </thead>
+
+            {{#each recipe.schedule.items}}
+              <tr>
+                <td><a href="#" onclick="controller.updateSchedule({{@index}}); return false;">⏱</a></td>
+                <td align="right">{{format_schedule_time
+                    this.startTimeMinutes
+                  }}
+                </td>
+                <td>({{format_schedule_time
+                    this.durationMinutes
+                  }})</td>
+                <td>{{this.description}}</td>
+              </tr>
+            {{/each}}
+          </table>
+        {{/if}}
+      </div>
+      <div class="recipe-instructions">
+        {{{recipe.notes}}}
+      </div>
+    </div>
+</script>
+
+<script id="tab-edit-tmpl" type="text/x-handlebars-template">
+  <textarea id="raw-data">{{recipe.recipeData.data}}</textarea>
+</script>
+
+<!-- These resources never change, just assign them a static version number. -->
+<script src="lib/handlebars.min-v4.7.7.js?v=0"></script>
+<script src="lib/marked.min-v3.0.8.js?v=0"></script>
+
+<script>
+  // Dynamically load this script to allow forcing a reload.
+  // FIXME(msolo) Might be better to just use URLs and use a build process
+  // to compute the links?
+  const script = document.createElement("script");
+  let url = new URL(document.location);
+  let dev = url.hostname == "localhost" || url.searchParams.get("dev");
+  let version = url.searchParams.get("v");
+  let scriptUrl = "dist/bulka.js";
+  if (dev) {
+    scriptUrl += "?nocache=" + Date.now();
+  } else if (version) {
+    // These links never expire.
+    scriptUrl += "?v=" + version;
+  }
+  script.src = scriptUrl;
+  document.head.appendChild(script);
+</script>
+
+</html>

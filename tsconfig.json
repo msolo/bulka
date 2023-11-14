@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "outFile": "dist/bulka.js",
+    "noEmitOnError": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
+    "target": "ES2016",
+    "esModuleInterop": true,
+    "strict": true,
+    "allowJs": true,
+    "declaration": true,
+    //"outDir": "dist"
+  },
+  "files": [
+    "ts/bulka.ts",
+    "ts/recipe.ts",
+    "ts/ui.ts"
+  ],
+  "include": [
+    // "*.ts"
+  ],
+}

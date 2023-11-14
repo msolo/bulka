@@ -1,0 +1,317 @@
+:root {
+    /* Apple Color Palette */
+    --red-light: rgb(255, 59, 48);
+    --red-dark: rgb(255, 69, 58);
+    --blue-light: rgb(0, 122, 255);
+    --blue-dark: rgb(10, 132, 255);
+    --gray-light: rgb(142, 142, 142);
+    --gray-dark: rgb(142, 142, 142);
+    --gray2-light: rgb(174, 172, 178);
+    --gray2-dark: rgb(99, 99, 102);
+    --gray3-light: rgb(199, 199, 204);
+    --gray3-dark: rgb(72, 72, 74);
+    --gray4-light: rgb(209, 209, 214);
+    --gray4-dark: rgb(58, 58, 60);
+    --gray5-light: rgb(229, 229, 234);
+    --gray5-dark: rgb(44, 44, 46);
+    --gray6-light: rgb(242, 242, 247);
+    --gray6-dark: rgb(28, 28, 30);
+
+    --main-bg-color: var(--gray6-light);
+    --menu-bg-color-light: var(--gray5-light);
+    --nav-height: 3rem;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+nav,
+main,
+div,
+button,
+menu,
+ul,
+li {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+html {
+    overflow-x: hidden;
+    max-width: 100vw;
+    height: 100vh;
+    background-color: var(--main-bg-color);
+    overscroll-behavior: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    /* This is a hack, it might be eventually better to just to swap
+    the color variables. */
+    html {
+        filter: invert(95%) hue-rotate(180deg) brightness(0.95);
+    }
+}
+
+body {
+    width: 100%;
+    height: 100%;
+}
+
+menu {
+    display: inline;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    line-height: 1.5rem;
+}
+
+.toolbar>*:first-child {
+    flex: 1;
+    text-align: left;
+}
+
+.toolbar>*:nth-child(2) {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.toolbar>*:last-child {
+    flex: 1;
+    text-align: right;
+}
+
+.toolbar-spacer {
+    height: var(--nav-height);
+}
+
+.toolbar * {
+    line-height: 1.5rem;
+}
+
+.toolbar a,
+.toolbar button,
+.toolbar label {
+    margin: 0 0.25rem;
+    color: inherit;
+    background-color: inherit;
+}
+
+.toolbar span {
+    white-space: nowrap;
+}
+
+.toolbar a {
+    text-decoration: none;
+    vertical-align: baseline;
+}
+
+.toolbar button,
+.toolbar label {
+    font-size: 1rem;
+    font-family: system-ui;
+    cursor: pointer;
+}
+
+.toolbar button {
+    min-width: 1.5rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    vertical-align: top;
+    color: var(--blue-light);
+    stroke: var(--blue-light);
+    display: inline;
+}
+
+.toolbar button:active {
+    color: var(--gray-light);
+    stroke: var(--gray-light);
+}
+
+.toolbar label {
+    pointer-events: none;
+    font-weight: bold;
+}
+
+.toolbar svg {
+    vertical-align: top;
+    pointer-events: none;
+    color: inherit;
+    stroke: inherit;
+}
+
+.toolbar svg:active {
+    vertical-align: top;
+    pointer-events: none;
+}
+
+/* @media all and (min-width: 630px) and (pointer:course) { */
+@media all and (min-width: 630px) {
+    /* tablet */
+    nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--nav-height);
+        padding: 0.75rem 0.25rem;
+        background-color: var(--main-bg-color);
+        border-bottom: 1px var(--gray2-light) solid;
+    
+        user-select: none;
+        -webkit-user-select: none;
+    
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+    }
+
+    main {
+        overflow-y: hidden;
+    }
+    
+    #tab-filelist {
+        display: block;
+        float: left;
+        width:25%;
+        height:100%;
+        border-right: 1px solid var(--gray2-light);
+        overflow-y: scroll;
+        margin-right:1rem;
+        margin-left:-30%;
+        transition: margin-left 0.25s;
+    }
+    
+    #tab-filelist.visible {
+        /* For the transition to fire, we must manually set display:block - not sure why. */
+        display:block;
+        margin-left:0;
+    }
+}
+
+@media all and (max-width: 629px) {
+    /* mobile  */
+    nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: var(--nav-height);
+        padding: 0.75rem 0.25rem;
+        background-color: var(--main-bg-color);
+        border-top: 1px var(--gray2-light) solid;
+    
+        user-select: none;
+        -webkit-user-select: none;
+    
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+    }
+
+    .toolbar-spacer {
+        display:none;
+        /* height: var(--nav-height); */
+    }
+
+    .tab-content {
+        width: 100%;
+    }
+
+    #button-hide-sidebar {
+        visibility: hidden;
+    }
+}
+
+main {
+    overflow-x: hidden;
+    overflow-y: hidden;
+    height: calc(100% - var(--nav-height));
+}
+
+.filelist {
+    font-size: 1rem;
+    font-family: system-ui, -apple-system;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+ul.filelist {
+    list-style-type: none;
+    padding: 0;
+    background: var(--main-bg-color);
+}
+
+.filelist custom-button,
+.filelist button {
+    width: 100%;
+    height: 2.5rem;
+    padding: 0.75rem;
+    display: block;
+    border-bottom: 1px solid var(--gray2-light);
+
+    color: #000;
+    font-size: 1rem;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-color: var(--main-bg-color);
+}
+
+.filelist custom-button:after,
+.filelist button:after {
+    content: "〉";
+    float: right;
+    font-weight: bold;
+    color: var(--gray2-light);
+    text-shadow: 1px 0 1px var(--gray2-light);
+}
+
+/* This is manually triggered by Javascript event handlers. */
+.filelist custom-button.active,
+.filelist button.active {
+        background: var(--blue-light);
+    color: var(--main-bg-color);
+    /* transition: all 0.5s ease-in-out; */
+}
+
+.tab-content {
+    display: none;
+    vertical-align: top;
+    height: 100%;
+    overflow-y: scroll;
+
+    /*
+    NOTE(msolo) These transitions are a bit wacky.
+    For some reason you cannot change display:none -> block and also
+    expect a transtion to fire without a setInterval() hack.
+    margin-left: 100vw;
+    transition: margin-left 0.1s;
+    */
+}
+
+.tab-content.visible {
+    display: block;
+}
+
+textarea {
+    font-size: 1rem;
+    line-height: 1.25em;
+    min-height: 100%;
+    width: 100%;
+    height: 100%;
+    resize: none;
+    border: 0;
+    margin: 0;
+    padding: 1em;
+    display: block;
+    background-color: var(--main-bg-color);
+}
