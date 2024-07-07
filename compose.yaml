@@ -1,0 +1,16 @@
+services:
+  web:
+    image: bulka
+    build: ./docker
+
+    container_name: bulka-web
+    user: svc
+    command: /pwd/server.py --data-path /data
+    ports:
+      - "8000:8000"
+    restart: always
+    stop_signal: SIGINT # python
+    volumes:
+      - .:/pwd
+      - ./data:/data
+    working_dir: /pwd

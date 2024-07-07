@@ -3,13 +3,13 @@
     "name": "Bulka",
     "icons": [
       {
-        "src": "https://hiredgoons.com/apps/bulka/img/bulka.png",
+        "src": "/apps/bulka/img/bulka.png",
         "type": "image/png",
         "sizes": "512x512"
       }
     ],
     "id": "/?source=pwa",
-    "start_url": "https://hiredgoons.com/apps/bulka/?source=pwa",
+    "start_url": "/apps/bulka/?source=pwa",
     "background_color": "#000000",
     "display": "standalone",
     "scope": "/",

@@ -46,6 +46,7 @@ html {
     height: 100vh;
     background-color: var(--main-bg-color);
     overscroll-behavior: none;
+    font-family: sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -115,7 +116,7 @@ menu {
 .toolbar button,
 .toolbar label {
     font-size: 1rem;
-    font-family: system-ui;
+    font-family: system-ui, -apple-system;
     cursor: pointer;
 }
 
@@ -163,10 +164,10 @@ menu {
         padding: 0.75rem 0.25rem;
         background-color: var(--main-bg-color);
         border-bottom: 1px var(--gray2-light) solid;
-    
+
         user-select: none;
         -webkit-user-select: none;
-    
+
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
     }
@@ -174,7 +175,7 @@ menu {
     main {
         overflow-y: hidden;
     }
-    
+
     #tab-filelist {
         display: block;
         float: left;
@@ -186,7 +187,7 @@ menu {
         margin-left:-30%;
         transition: margin-left 0.25s;
     }
-    
+
     #tab-filelist.visible {
         /* For the transition to fire, we must manually set display:block - not sure why. */
         display:block;
@@ -205,10 +206,10 @@ menu {
         padding: 0.75rem 0.25rem;
         background-color: var(--main-bg-color);
         border-top: 1px var(--gray2-light) solid;
-    
+
         user-select: none;
         -webkit-user-select: none;
-    
+
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
     }

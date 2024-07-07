@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outFile": "dist/bulka.js",
+    "outFile": "../dist/bulka.js",
     "noEmitOnError": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
@@ -10,14 +10,8 @@
     "strict": true,
     "allowJs": true,
     "declaration": true,
-    //"outDir": "dist"
+    "module": "system",
+    "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */
+    "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
-  "files": [
-    "ts/bulka.ts",
-    "ts/recipe.ts",
-    "ts/ui.ts"
-  ],
-  "include": [
-    // "*.ts"
-  ],
 }

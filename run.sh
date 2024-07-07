@@ -1,23 +1,7 @@
 #!/bin/sh
 
 if [ "$1" != "" ]; then
-    docker_args="-it --rm"
+    docker-compose run --rm web /pwd/server.py --data-path /data "$@"
 else
-    docker_args="--name bulka --init --detach --restart=always"
+    docker-compose up --detach
 fi
-
-if [ "$PORT" = "" ]; then
-    PORT=8000
-fi
-
-# Don't run as root inside - it's not necessary and git
-# dumps a bunch of pointless warnings.
-docker run $docker_args \
-       -e PUID=1000 \
-       -e PGID=1000 \
-       -e TZ=America/Los_Angeles \
-       -p $PORT:8000 \
-       -v $PWD:/pwd \
-       -w /pwd \
-       -u 1000 \
-       bulka /pwd/server.py "$@"

@@ -8,13 +8,14 @@ from http.server import HTTPStatus
 import io
 import os
 import pathlib
+import posixpath
 import subprocess
 import urllib
 import urllib.parse
 import sys
 
-
 class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+    url_prefix_dir_map = {}
     base_dir = None
 
     def handle(self):
@@ -23,6 +24,44 @@ class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         except ConnectionResetError:
             # This is business as usual when you have persistent connections.
             pass
+
+    def translate_path(self, path):
+        """Translate a /-separated PATH to the local filename syntax.
+
+        Components that mean special things to the local file system
+        (e.g. drive or directory names) are ignored.  (XXX They should
+        probably be diagnosed.)
+
+        """
+        # abandon query parameters
+        path = path.split('?',1)[0]
+        path = path.split('#',1)[0]
+        # Don't forget explicit trailing slash when normalizing. Issue17324
+        trailing_slash = path.rstrip().endswith('/')
+        try:
+            path = urllib.parse.unquote(path, errors='surrogatepass')
+        except UnicodeDecodeError:
+            path = urllib.parse.unquote(path)
+
+        base_dir = self.base_dir
+        for prefix, path_override in sorted(self.url_prefix_dir_map.items(), reverse=True):
+            if path.startswith(prefix):
+                path = path[len(prefix):]
+                base_dir = path_override
+                break
+        path = posixpath.normpath(path)
+        words = path.split('/')
+        words = filter(None, words)
+        path = base_dir
+        for word in words:
+            if os.path.dirname(word) or word in (os.curdir, os.pardir):
+                # Ignore components that are not a simple file/directory name
+                continue
+            path = os.path.join(path, word)
+        if trailing_slash:
+            path += '/'
+        return path
+
 
     def do_PUT(self):
         # Only write if an identity provided in the header. Generally this comes
@@ -35,6 +74,7 @@ class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         # only write file to our "data" directories - yes this is shitty.
         tpath = self.translate_path(self.path)
+
         if os.path.basename(os.path.dirname(tpath)) != "data":
             self.close_connection = True
             self.send_response(405, "Method Not Allowed")
@@ -42,6 +82,10 @@ class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "PUT allowed only in an explicit data directory\n".encode()
             )
             return
+
+        uri = urllib.parse.urlparse(self.path)
+        qargs = urllib.parse.parse_qs(uri.query, keep_blank_values=True)
+
 
         path = pathlib.Path(self.base_dir) / self.translate_path(self.path)
         if not path:
@@ -59,26 +103,27 @@ class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         with open(path, "wb") as f:
             f.write(self.rfile.read(length))
 
-        # git add ./data/$name
-        # git commit -m "autocommit ./data/$name" ./data/$name
-        try:
-            env = {
-                'GIT_AUTHOR_NAME': 'Dr Robotnik',
-                'GIT_AUTHOR_EMAIL': 'dr.robotnick@localhost',
-                'GIT_COMMITTER_NAME': 'Dr Robotnik',
-                'GIT_COMMITTER_EMAIL': 'dr.robotnick@localhost',
-            }
-            subprocess.check_output(['git', 'add', path], env=env, stderr=subprocess.PIPE)
-            subprocess.check_output(['git', 'commit', '-m', 'autocommit '+str(path), path], env=env, stderr=subprocess.PIPE)
-        except subprocess.CalledProcessError as e:
-            self.close_connection = True
-            self.send_response(500, 'Internal Server Error')
-            self.wfile.write(b"Error committing new version.\n" + e.stderr)
-            # NOTE(msolo) Nothing demonstrates the overwhelming sadness of
-            # Python3 like two adjacent calls to "write" functions that have
-            # exactly opposite and indecipherable semantics.
-            sys.stderr.write(e.stderr.decode('utf8'))
-            return
+        if qargs.get("commit"):
+            # git add ./data/$name
+            # git commit -m "autocommit ./data/$name" ./data/$name
+            try:
+                env = {
+                    'GIT_AUTHOR_NAME': 'Dr Robotnik',
+                    'GIT_AUTHOR_EMAIL': 'dr.robotnick@localhost',
+                    'GIT_COMMITTER_NAME': 'Dr Robotnik',
+                    'GIT_COMMITTER_EMAIL': 'dr.robotnick@localhost',
+                }
+                subprocess.check_output(['git', 'add', path], env=env, stderr=subprocess.PIPE)
+                subprocess.check_output(['git', 'commit', '-m', 'autocommit '+str(path), path], env=env, stderr=subprocess.PIPE)
+            except subprocess.CalledProcessError as e:
+                self.close_connection = True
+                self.send_response(500, 'Internal Server Error')
+                self.wfile.write(b"Error committing new version.\n" + e.stderr)
+                # NOTE(msolo) Nothing demonstrates the overwhelming sadness of
+                # Python3 like two adjacent calls to "write" functions that have
+                # exactly opposite and indecipherable semantics.
+                sys.stderr.write(e.stderr.decode('utf8'))
+                return
 
         self.send_response(*response)
         self.end_headers()
@@ -253,10 +298,20 @@ if __name__ == "__main__":
         action="store_true",
         help="Disable the header check for a certifice-based identity.",
     )
+    parser.add_argument(
+        "--data-path",
+        default="./data",
+        help="Data path for recipes.",
+    )
 
     ARGS = parser.parse_args()
-    HTTPRequestHandler.base_dir = "./data"
 
+    HTTPRequestHandler.base_dir = "."
+
+    if ARGS.data_path:
+        HTTPRequestHandler.url_prefix_dir_map['/data/'] = "/data"
+
+    print("start server: path", ARGS.data_path, file=sys.stderr)
     http.server.test(
         HandlerClass=HTTPRequestHandler,
         # # The default is threaded, which helps almost noone, but is sort of demanded by browsers.

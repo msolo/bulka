@@ -27,24 +27,50 @@ var untitleRecipeText = `# Untitled Bread
 ## Preferment
   - Poolish 30%
 
+## Schedule
+  - @10:00 start
+  - 00:00 start dough mix
+  - 00:20 turn dough and proof in oven
+  - 01:20 turn dough
+  - 02:20 turn dough (maybe)
+  - 03:20 divide and initial shaping
+  - 03:30 start resting dough
+  - 04:00 start final shaping
+  - 04:15 start heating oven
+  - 05:00 start first bake
+  - 05:25 start second bake
+  - 05:50 start last bake
+
 ## Notes
+  * Preferments: Biga, Poolish, Prefermented Dough, Sponge
   * Underwear goes **inside** the pants.
 `;
 
-class AppSession {
+
+class AppSessionState {
   selectedRecipeName = "";
+  scheduleUpdates: { [key: string]: { [key: number]: number } } = {};
+}
+
+class AppSession {
+  state: AppSessionState;
+
+  constructor() {
+    this.state = new (AppSessionState);
+  }
 
   load() {
-    let x = window.sessionStorage.getItem("selectedRecipeName");
+    let x = window.localStorage.getItem("v1/bulka-session.json");
     if (x) {
-      this.selectedRecipeName = x;
+      let state = { ...new (AppSessionState), ...JSON.parse(x) };
+      this.state = state;
     }
   }
 
   store() {
-    window.sessionStorage.setItem(
-      "selectedRecipeName",
-      this.selectedRecipeName
+    window.localStorage.setItem(
+      "v1/bulka-session.json",
+      JSON.stringify(this.state)
     );
   }
 }
@@ -268,18 +294,9 @@ class AppController {
     }
   }
 
-  // shouldDisplayInstallMessage(): boolean {
-  //   // Detects if device is on iOS
-  //   const isIos = () => {
-  //     const userAgent = window.navigator.userAgent.toLowerCase();
-  //     return /iphone|ipad|ipod/.test(userAgent);
-  //   }
-  //   // Detects if device is in standalone mode
-  //   const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
-
-  //   // Checks if should display install popup notification:
-  //   return isIos() && !isInStandaloneMode();
-  // }
+  onClearStorage() {
+    window.localStorage.clear();
+  }
 
   onInstall() {
     let l = window.location;
@@ -309,11 +326,18 @@ class AppController {
       name = this.data.recipeMap.keys().next().value;
       rt = this.data.recipeMap.get(name);
     }
-    this.session.selectedRecipeName = name;
+    this.session.state.selectedRecipeName = name;
     this.session.store();
 
     rt?.scaleRecipe();
     this.data.currentRecipe = rt;
+
+    let updates = this.session.state.scheduleUpdates[name];
+    if (updates) {
+      for (let x in Object.keys(updates).sort()) {
+        this.updateSchedule(parseInt(x), updates[x]);
+      }
+    }
 
     this.renderViewRecipe();
   }
@@ -361,11 +385,39 @@ class AppController {
     return template(data);
   }
 
-  updateSchedule(item: number) {
-    let d = new Date();
-    let startTime = d.getHours() * 60 + d.getMinutes();
-    console.log("updateSchedule:" + startTime, this.data.currentRecipe);
-    this.data.currentRecipe?.schedule?.fixDurations(item, startTime);
+  // Reset schedule to the start time specified in the recipe.
+  resetSchedule() {
+    this.updateSchedule(0, this.data.currentRecipe?.schedule?.startTimeMinutes);
+  }
+
+  // Reset schedule to start at time zero.
+  zeroSchedule() {
+    this.updateSchedule(0, 0);
+  }
+
+
+  updateSchedule(item: number, startTimeMinutes: number = -1) {
+    if (startTimeMinutes == -1) {
+      let d = new Date();
+      startTimeMinutes = d.getHours() * 60 + d.getMinutes();
+    }
+    console.log("updateSchedule:" + startTimeMinutes, this.data.currentRecipe);
+    this.data.currentRecipe?.schedule?.recalcStartTimes(item, startTimeMinutes);
+
+    let l = this.data.currentRecipe?.schedule?.items.length
+
+    let updateMap = this.session.state.scheduleUpdates[this.data.currentRecipe!.name];
+    let newUpdateMap: { [key: number]: number } = {};
+
+    if (updateMap) {
+      for (let i = 0; i < item; i++) {
+        newUpdateMap[i] = updateMap[0]
+      }
+    }
+
+    newUpdateMap[item] = startTimeMinutes;
+    this.session.state.scheduleUpdates[this.data.currentRecipe!.name] = newUpdateMap;
+    this.session.store();
     this.renderViewRecipe();
   }
 
@@ -527,7 +579,7 @@ function main() {
   let appData = new AppData();
   controller = new AppController(appData, appSession, "raw-data");
   appData.onDataLoaded = function (appData: AppData) {
-    controller.selectRecipe(appSession.selectedRecipeName);
+    controller.selectRecipe(appSession.state.selectedRecipeName);
   };
   appData.init();
 }

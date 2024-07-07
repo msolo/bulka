@@ -8,20 +8,27 @@ class Ingredient {
 }
 
 class Schedule {
-  constructor(public items: ScheduleItem[], public startTime = 0) { }
-  fix(start: number = 0) {
-    if (start) {
-      this.startTime = start;
+  // startTimeMinutes: 0-1440 minute of the day we start.
+  constructor(public items: ScheduleItem[], public startTimeMinutes = 0) {
+    this.calcDurations();
+  }
+
+  // Calculate the schedule durations based on a start times for each item.
+  calcDurations(startTimeMinutes: number = -1) {
+    if (startTimeMinutes != -1) {
+      this.startTimeMinutes = startTimeMinutes;
     }
     for (let i = this.items.length - 2; i >= 0; i--) {
       let x = this.items[i + 1];
       let y = this.items[i];
       this.items[i].durationMinutes = x.startTimeMinutes - y.startTimeMinutes;
     }
-    this.fixDurations();
+    this.recalcStartTimes();
   }
-  fixDurations(itemIdx: number = 0, startTimeMinutes: number = 0) {
-    this.items[itemIdx].startTimeMinutes = startTimeMinutes || this.startTime;
+
+  // Adjust the start times of each subsequent item based on the duration of a step.
+  recalcStartTimes(itemIdx: number = 0, startTimeMinutes: number = -1) {
+    this.items[itemIdx].startTimeMinutes = startTimeMinutes != -1 ? startTimeMinutes : this.startTimeMinutes;
     for (let i = itemIdx; i < this.items.length - 1; i++) {
       let x = this.items[i];
       let y = this.items[i + 1];
@@ -30,6 +37,8 @@ class Schedule {
   }
 }
 
+// Schedule items are specified as an offset from zero.
+// The duration is calculated.
 class ScheduleItem {
   constructor(
     public startTimeMinutes: number,
@@ -40,6 +49,7 @@ class ScheduleItem {
 
 class Formula {
   constructor(public name: string, public ingredients: Ingredient[]) { }
+
   totalPercent(): number {
     let sum = 0.0;
     for (let i of this.ingredients) {
@@ -54,7 +64,8 @@ class Preferment extends Formula {
   // Create a formula-specific preferment.
   // This assumes that a bread formula lists it's flour type as the first ingredient.
   makePrefermentForFormula(formula: Formula, fermentTime: string): Formula {
-    let ing = [new Ingredient(formula.ingredients[0].name, 100)];
+    // let ing = [new Ingredient(formula.ingredients[0].name, 100),];
+    let ing = [];
     for (let i of this.ingredients) {
       let x = new Ingredient(i.name, i.percent);
       if (i.name.toLowerCase().includes("yeast") && this.scaleYeastByTime) {
@@ -73,6 +84,7 @@ var prefermentTimeYeastPercentMap: { [key: string]: number } = {
 };
 
 const PrefermentedDough = new Preferment("Prefermented Dough", [
+  new Ingredient("Bread Flour", 100.0),
   new Ingredient("Water", 65.0),
   new Ingredient("Salt", 2.0),
   new Ingredient("Yeast", 0.6),
@@ -80,21 +92,38 @@ const PrefermentedDough = new Preferment("Prefermented Dough", [
 PrefermentedDough.scaleYeastByTime = false;
 
 const Poolish = new Preferment("Poolish", [
+  new Ingredient("Bread Flour", 100.0),
   new Ingredient("Water", 100.0),
   new Ingredient("Yeast", 0.6),
 ]);
 
 const Sponge = new Preferment("Sponge", [
+  new Ingredient("Bread Flour", 100.0),
   new Ingredient("Water", 60.0),
   new Ingredient("Yeast", 0.6),
 ]);
 
 const Biga = new Preferment("Biga", [
+  new Ingredient("Bread Flour", 100.0),
   new Ingredient("Water", 50.0),
   new Ingredient("Yeast", 0.6),
 ]);
 
-var prefementList = [null, Poolish, Sponge, PrefermentedDough, Biga];
+const LiquidLevain = new Preferment("Liquid Levain", [
+  new Ingredient("Bread Flour", 95.0),
+  new Ingredient("Whole Wheat Flour", 5.0),
+  new Ingredient("Water", 100.0),
+  new Ingredient("Liquid Starter", 20.0),
+]);
+
+const StiffLevain = new Preferment("Stiff Levain", [
+  new Ingredient("Bread Flour", 95.0),
+  new Ingredient("Whole Wheat Flour", 5.0),
+  new Ingredient("Water", 50.0),
+  new Ingredient("Stiff Starter", 12.5),
+]);
+
+var prefementList = [null, Poolish, Sponge, PrefermentedDough, Biga, LiquidLevain, StiffLevain];
 
 class RecipeTemplate {
   finalFormula?: Formula;
@@ -120,6 +149,10 @@ class RecipeTemplate {
       );
     }
   }
+
+  // static from(json: object) {
+  //   return Object.assign(new RecipeTemplate(), json);
+  // }
 
   static parse(rd: RecipeData): RecipeTemplate {
     let rt = this.parseData(rd.data);
@@ -201,6 +234,7 @@ class RecipeTemplate {
             if (startTime.startsWith("@")) {
               readSchedStart = true;
               startTime = startTime.substr(1);
+              console.log("parse start", name, startTime);
             }
             let match = startTime.match("(\\d+):(\\d+)");
             if (match == null) {
@@ -216,8 +250,8 @@ class RecipeTemplate {
               schedItems.push(new ScheduleItem(totalMinutes, 0, desc));
             }
           } else if (!line) {
+            console.log("start", schedStart);
             schedule = new Schedule(schedItems, schedStart);
-            schedule.fix();
             i = j;
             break;
           }
@@ -228,38 +262,38 @@ class RecipeTemplate {
           break;
         }
 
-        let schedItems = [];
+        // let schedItems = [];
         let noteLines = [];
         for (let j = i + 1; j < lines.length; j += 1) {
           line = lines[j].trim();
-          if (line.startsWith("### ")) {
-            // ### Step name 00:15
-            // Infer a step that takes 15 minutes.
-            // ### Step name -00:30
-            // Infer a step that takes 30 minutes, but must finish before the next step.
-            // how do you handle multiple items like this? I'm not sure it composes.
-            // implicitly, we say items must proceed sequentially. encoding parallel workfllows
-            // is more complicated and you can thing of it as a graph.
-            let words = line.split(" ");
-            let duration = words[words.length - 1];
+          // if (line.startsWith("### ")) {
+          //   // ### Step name 00:15
+          //   // Infer a step that takes 15 minutes.
+          //   // ### Step name -00:30
+          //   // Infer a step that takes 30 minutes, but must finish before the next step.
+          //   // how do you handle multiple items like this? I'm not sure it composes.
+          //   // implicitly, we say items must proceed sequentially. encoding parallel workfllows
+          //   // is more complicated and you can think of it as a graph.
+          //   let words = line.split(" ");
+          //   let duration = words[words.length - 1];
 
-            let match = duration.match("(\\d+):(\\d+)");
-            if (match != null) {
-              let hours = parseInt(match[1], 10);
-              let minutes = parseInt(match[2], 10);
-              let durationMinutes = hours * 60 + minutes;
-              let desc = words.slice(1, -1).join(" ");
-              schedItems.push(new ScheduleItem(0, durationMinutes, desc));
-              line = words.slice(0, -1).join(" ");
-            }
-          }
+          //   let match = duration.match("(\\d+):(\\d+)");
+          //   if (match != null) {
+          //     let hours = parseInt(match[1], 10);
+          //     let minutes = parseInt(match[2], 10);
+          //     let durationMinutes = hours * 60 + minutes;
+          //     let desc = words.slice(1, -1).join(" ");
+          //     schedItems.push(new ScheduleItem(0, durationMinutes, desc));
+          //     line = words.slice(0, -1).join(" ");
+          //   }
+          // }
           noteLines.push(line);
         }
         notes = noteLines.join("\n");
-        if (schedItems.length > 0) {
-          schedule = new Schedule(schedItems);
-          schedule.fixDurations();
-        }
+        // if (schedItems.length > 0) {
+        //   schedule = new Schedule(schedItems);
+        //   schedule.fixDurations();
+        // }
         break;
       }
     }

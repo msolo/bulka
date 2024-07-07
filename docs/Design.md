@@ -56,9 +56,9 @@ A side effect of using browser tech is that there isn't a nice story around stor
 I develop this using a tiny python web server. This lets me disable caching on all files so I don't have deal with stale-on-reload issues and easily implement write functionality like `PUT`. This server typically receives 10 requests a week; scalability is not a concern.
 
 # TODOs
-
  - [ ] TODO: It should be possible to clone a recipe or do "save as".
  - [ ] TODO: Automatic file names for recipes are not helpful - it's database in filesystem, not actually useful to a human.
+ - [ ] TODO: When we have many similar recipes, we need folders to group them so we can look carefully. Maybe tags?
  - [ ] TODO: watch out for clobbering with stale app data.
  - [ ] TODO: parse errors either need to be reverted, or discussed somehow - right now they show up as save failure, which isn't true and leaves the data model inconsistent.
  - [ ] TODO: Use WebDAV instead of cobbled `GET/PUT` - advisory locking would be nice, but `PUT` with `if-unmodified-since` (essentially a conditional `PUT`, almost a CAS) would probably be much simpler.
@@ -98,3 +98,11 @@ document.addEventListener(
 ```
 
 This should be the default obviously, but the behavior is still far from ideal. Somehow, there is no visual tracking of the button by default. It's very disappointing that CSS is not enough and that the default behaviors are so far from ideal, but the amount of Javascript to fix this is actually fairly small. See `CustomButton` for more details.
+
+# Notifications
+
+As of iOS Safari 17, Notifications are not useful. If the code goes to sleep, it doens't seem like you can fire a timely notification. Service Workers also don't work; events triggered from the background seems to trigger a warning that notifcations can only be sent in reponse to a gesture.
+
+The question is - can you make a Progressive Web App alarm clock? Currently, on iOS, the answer seems to be "no."
+
+You may be able to register for "push" notifictions, but that requires a server connection.

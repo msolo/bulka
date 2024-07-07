@@ -108,6 +108,9 @@
             <button onclick="controller.onInstall();">
               Prepare Install...
             </button>
+            <button onclick="localStorage.clear();">
+              Reset Local Storage
+            </button>
             <button class="divider-after" onclick="controller.onReload();">
               Force Reload
             </button>
@@ -145,7 +148,7 @@
         onclick="controller.onSelectRecipe('{{this.name}}');"
         >
         {{this.name}} {{#if this.recipeData.isModified}}•{{/if}}
-      </button>
+      </custom-button>
     </li>
     {{/each}}
   </ul>
@@ -154,7 +157,7 @@
 <script id="tab-view-tmpl" type="text/x-handlebars-template">
     <div class="recipe-section">
       <div class="recipe-ingredients">
-        <h1>{{recipe.name}}</h1>
+        <h1 style="display:inline-block;">{{recipe.name}}</h1> ({{recipe.quantityGrams}}g)
         {{#if recipe.prefermentFormula}}
           <h2>
             {{recipe.prefermentFormula.name}}
@@ -196,25 +199,39 @@
           </table>
         {{/if}}
 
-        <h2>Total Formula {{recipe.quantityGrams}}g</h2>
-        <table>
-          <thead>
-            <td class="width-50">Ingredient</td>
-            <td class="width-25" align="right">Baker's %</td>
-            <td class="width-25" align="right">Amount</td>
-          </thead>
-          {{#each recipe.formula.ingredients}}
-            <tr>
-              <td>{{this.name}}</td>
-              <td align="right">{{format_percentage this.percent}}%</td>
-              <td align="right">{{format_grams this.amountGrams}}g</td>
-            </tr>
-          {{/each}}
-        </table>
+        <details
+        {{#unless recipe.prefermentFormula}}
+            open
+        {{/unless}}
+                >
+          <summary>
+            <h2 style="
+              display: inline-block;
+              ">Total Formula {{recipe.quantityGrams}}g</h2>
+          </summary>
+          <table>
+            <thead>
+              <td class="width-50">Ingredient</td>
+              <td class="width-25" align="right">Baker's %</td>
+              <td class="width-25" align="right">Amount</td>
+            </thead>
+            {{#each recipe.formula.ingredients}}
+              <tr>
+                <td>{{this.name}}</td>
+                <td align="right">{{format_percentage this.percent}}%</td>
+                <td align="right">{{format_grams this.amountGrams}}g</td>
+              </tr>
+            {{/each}}
+          </table>
+        </details>
+
 
         {{#if recipe.schedule}}
-          <h2> Schedule </h2>
-          <table>
+          <h2> Schedule
+          (<a href="#" onclick="controller.resetSchedule();">Reset</a> &mdash;
+          <a href="#" onclick="controller.zeroSchedule();">Zero</a>)
+        </h2>
+        <table>
             <thead>
               <td style="width:3ch;"></td>
               <td style="width:5ch;" align="right">Start</td>
